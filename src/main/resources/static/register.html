@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>注册页面</title>
+</head>
+<body>
+    <h2>注册</h2>
+    <form id="registerForm">
+        <label for="username">用户名：</label>
+        <input type="text" id="username" name="username" required><br><br>
+        <label for="password">密码：</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password"><br><br>
+        <button type="submit">注册</button>
+    </form>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // 验证用户名是否为字母和数字的组合
+            if (!/^[a-zA-Z0-9]+$/.test(username)) {
+                alert('用户名必须为字母和数字的组合！');
+                return;
+            }
+
+            fetch('http://localhost:8100/user/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('HTTP error, status = ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.code === '0') {
+                    alert('注册成功！');
+                    // 可以跳转到登录页面
+                } else {
+                    alert(data.msg);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('注册失败，请检查网络或联系管理员。');
+            });
+        });
+    </script>
+</body>
+</html>

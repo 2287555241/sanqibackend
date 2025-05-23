@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>登录页面</title>
+</head>
+<body>
+    <h2>登录</h2>
+    <form id="loginForm">
+        <label for="username">用户名：</label>
+        <input type="text" id="username" name="username" required autocomplete="username"><br><br>
+        <label for="password">密码：</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password"><br><br>
+        <button type="submit">登录</button>
+    </form>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                alert('请输入用户名和密码！');
+                return;
+            }
+
+            fetch('http://localhost:8100/user/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('HTTP error, status = ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.code === '0') {
+                    alert('登录成功！');
+                    console.log('登录成功，返回的用户信息：', data.data);
+                } else {
+                    alert(data.msg);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('登录失败，请检查网络或联系管理员。');
+            });
+        });
+    </script>
+</body>
+</html>

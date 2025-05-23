@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sanqibackend.sanqibackend.mapper.SanqiRegionMapper">
+    <select id="findAll" resultType="sanqibackend.sanqibackend.entity.SanqiRegion">
+        SELECT * FROM public.sanqi
+    </select>
+    
+    <select id="findById" resultType="sanqibackend.sanqibackend.entity.SanqiRegion">
+        SELECT * FROM public.sanqi WHERE gid = #{id}
+    </select>
+</mapper> 
