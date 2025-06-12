@@ -13,10 +13,12 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:8080") // 允许前端地址
+                        // 使用 allowedOriginPatterns 代替 allowedOrigins
+                        .allowedOriginPatterns("http://localhost:8080", "http://127.0.0.1:5500")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
-                        .allowCredentials(true);
+                        .allowCredentials(true)
+                        .maxAge(3600);  // 增加预检请求缓存时间
             }
         };
     }
