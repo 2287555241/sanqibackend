@@ -132,9 +132,15 @@ public class RasterDataController {
             log.info("获取栅格数据, ID: {}", id);
             RasterData rasterData = rasterDataService.getRasterDataById(id);
             log.info("成功获取栅格数据");
+            
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("data", rasterData);
+            
+            // 添加创建时间和数据类型的读取
+            response.put("createdAt", rasterData.getCreatedAt() != null ? rasterData.getCreatedAt().toString() : "无");
+            response.put("rasterType", rasterData.getRasterType() != null ? rasterData.getRasterType() : "无");
+            
             return ResponseEntity.ok().body(response);
         } catch (Exception e) {
             log.error("获取栅格数据失败", e);
@@ -142,6 +148,42 @@ public class RasterDataController {
             response.put("success", false);
             response.put("error", "获取栅格数据失败: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("/{id}/size")
+    public ResponseEntity<?> getRasterDataSize(@PathVariable Long id) {
+        try {
+            log.info("获取栅格数据文件大小, ID: {}", id);
+            RasterData rasterData = rasterDataService.getRasterDataById(id);
+            long fileSize = rasterData.getFileSize();
+            log.info("成功获取栅格数据文件大小: {} bytes", fileSize);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("id", id);
+            response.put("name", rasterData.getName());
+            response.put("fileSize", fileSize);
+            response.put("fileSizeFormatted", formatFileSize(fileSize));
+            return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            log.error("获取栅格数据文件大小失败", e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", "获取栅格数据文件大小失败: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    private String formatFileSize(long size) {
+        if (size < 1024) {
+            return size + " B";
+        } else if (size < 1024 * 1024) {
+            return String.format("%.2f KB", size / 1024.0);
+        } else if (size < 1024 * 1024 * 1024) {
+            return String.format("%.2f MB", size / (1024.0 * 1024));
+        } else {
+            return String.format("%.2f GB", size / (1024.0 * 1024 * 1024));
         }
     }
     
@@ -160,6 +202,49 @@ public class RasterDataController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("error", "栅格数据删除失败: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PutMapping("/{id}/description")
+    public ResponseEntity<?> updateRasterDataDescription(
+            @PathVariable Long id,
+            @RequestParam("description") String description) {
+        try {
+            log.info("更新栅格数据描述, ID: {}", id);
+            RasterData rasterData = rasterDataService.getRasterDataById(id);
+            rasterData.setDescription(description);
+            rasterDataService.saveRasterData(rasterData);
+            log.info("栅格数据描述更新成功");
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "栅格数据描述更新成功");
+            return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            log.error("更新栅格数据描述失败", e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", "更新栅格数据描述失败: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("/{id}/description")
+    public ResponseEntity<?> getRasterDataDescription(@PathVariable Long id) {
+        try {
+            log.info("获取栅格数据描述, ID: {}", id);
+            RasterData rasterData = rasterDataService.getRasterDataById(id);
+            String description = rasterData.getDescription();
+            log.info("成功获取栅格数据描述: {}", description);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("description", description);
+            return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            log.error("获取栅格数据描述失败", e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", "获取栅格数据描述失败: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }

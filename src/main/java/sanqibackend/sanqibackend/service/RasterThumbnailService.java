@@ -12,9 +12,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import sanqibackend.sanqibackend.event.RasterDataImportedEvent;
+import org.springframework.context.event.EventListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 
 @Service
 public class RasterThumbnailService {
+
+    private static final Logger log = LoggerFactory.getLogger(RasterThumbnailService.class);
 
     @Value("${python.script.path}")
     private String pythonScriptPath;
@@ -26,6 +33,7 @@ public class RasterThumbnailService {
     private RasterDataRepository rasterDataRepository;
 
     @Autowired
+    @Lazy
     private RasterDataService rasterDataService;
 
     public boolean generateThumbnail(String inputPath, String outputPath) {
@@ -81,7 +89,6 @@ public class RasterThumbnailService {
         RasterData rasterData = rasterDataRepository.findById(id)
             .orElseThrow(() -> new Exception("未找到对应的影像数据"));
 
-        // 检查原始数据是否存在
         if (rasterData.getLoOid() == null) {
             throw new Exception("影像数据不完整，缺少原始文件");
         }
@@ -91,11 +98,9 @@ public class RasterThumbnailService {
         String outputPath = inputPath + ".thumbnail.jpg";
 
         try {
-            // 导出原始tif文件到临时路径
             System.out.println("正在导出原始文件到: " + inputPath);
             rasterDataService.exportRaster(id, inputPath);
 
-            // 检查导出的文件
             File inputFile = new File(inputPath);
             if (!inputFile.exists()) {
                 throw new Exception("导出原始文件失败：文件不存在");
@@ -110,13 +115,11 @@ public class RasterThumbnailService {
                 throw new Exception("Python脚本生成缩略图失败，请检查日志获取详细信息");
             }
 
-            // 检查生成的缩略图
             File outputFile = new File(outputPath);
             if (!outputFile.exists() || outputFile.length() == 0) {
                 throw new Exception("缩略图生成失败：输出文件无效");
             }
 
-            // 读取生成的缩略图文件为字节数组
             System.out.println("正在保存缩略图到数据库...");
             byte[] thumbnailBytes = Files.readAllBytes(Paths.get(outputPath));
             rasterData.setThumbnail(thumbnailBytes);
@@ -127,13 +130,22 @@ public class RasterThumbnailService {
             System.err.println("生成缩略图过程中发生错误: " + e.getMessage());
             throw e;
         } finally {
-            // 清理临时文件
             try {
                 new File(inputPath).delete();
                 new File(outputPath).delete();
             } catch (Exception e) {
                 System.err.println("清理临时文件时发生错误: " + e.getMessage());
             }
+        }
+    }
+
+    @EventListener
+    public void handleRasterDataImportedEvent(RasterDataImportedEvent event) {
+        try {
+            generateAndSaveThumbnail(event.getRasterDataId());
+            log.info("缩略图生成成功");
+        } catch (Exception e) {
+            log.error("缩略图生成失败: {}", e.getMessage(), e);
         }
     }
 } 
